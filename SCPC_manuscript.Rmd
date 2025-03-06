@@ -1,0 +1,222 @@
+---
+title: "SCPC manuscript"
+output: html_document
+date: "2025-03-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rtracklayer)
+library(GenomicRanges)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(data.table)
+library(readxl)
+library(GGally)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(org.Hs.eg.db)
+library(readr)
+
+options(bitmapType='cairo')
+png("xzvf.png")
+
+source('scripts/CREs.R')
+source('scripts/common_functions.R')
+
+```
+
+# Quantify the H3K27ac at SCPC-specific and AR-binding sites
+```{r TF_binding_siteste_signal_analysitess, echo=FALSE, warning=FALSE}
+
+mark = 'H3K27ac'
+
+meta = read_csv('data/metadata/Squamous_PC_plasma.csv')
+
+meta = subset(meta, antibody %in% mark)
+
+# file with noisy regions to exclude
+exclude_regions_file = 'data/sites/hg19-blacklist.v2.bed'
+exclude_regions = import(exclude_regions_file, format = 'bed')
+
+meta_sub = meta
+
+# prepare sites
+sites_file_list = list(   
+  
+  'data/sites/TCGA_Squamous_ATAC.bed',
+  'data/sites/AR_merged_hg19.bed',
+  'data/sites/Housekeeping_genes_promoters.bed',
+  'data/sites/top_common_DHS.bed'
+
+  )
+
+# prepare sites
+message('tiling sites')
+sites_list = tile_sites(sites_file_list, exclude_regions = exclude_regions)
+
+sites_names = str_replace(sites_file_list, '.*/', '') %>%
+  str_replace('.bed', '') 
+
+dir.create('out/TFBS')
+
+if(TRUE) {
+  
+keep_sites = !grepl('xxxxx', sites_names)
+toplot = NULL
+count = 1
+tot = nrow(meta_sub)
+for(rds in meta_sub$rds_file) {
+  message('processitesng ', rds, ' --- ', count, ' of ', tot)
+  counts = signal_at_sites(
+    frags_file = rds,
+    sites_list = sites_list[keep_sites],
+    sites_names = sites_names[keep_sites],
+    remove_peaks_wider_than = 5000
+  )
+  counts$cancer_type = meta_sub$cancer_type[meta_sub$rds_file == rds]
+  counts$cancer_subtype = meta_sub$cancer_subtype[meta_sub$rds_file == rds]
+  counts$study_name = meta_sub$study_name[meta_sub$rds_file == rds]
+  toplot = rbind(toplot, counts)
+  count = count + 1
+}
+
+saveRDS(toplot, paste0('out/TFBS/', mark, '_SCPC_monitoring_profiles.RDS'))
+}
+
+
+```
+
+``` {r plot_profiles_targeted, echo=FALSE, warning=FALSE, message=FALSE}
+
+mark = 'H3K27ac'
+
+meta = read_csv('data/metadata/Squamous_PC_plasma.csv')
+
+meta = subset(meta, antibody %in% mark)
+
+meta$ctDNA = as.numeric(meta$ctDNA)
+meta$Date = as.Date(meta$Date_of_draw, format = "%m/%d/%Y")
+  
+  meta_sub = meta
+  
+plot_params_list = list(
+
+  list('Squamous', 'H3K27ac', 'TCGA_Squamous_ATAC', 'top_common_DHS'),
+  list('Squamous', 'H3K27ac', 'AR_merged_hg19', 'top_common_DHS'),
+  list('Squamous', 'H3K27ac', 'Housekeeping_genes_promoters', 'top_common_DHS')
+)
+
+dir.create('out/TFBS/scores')
+for(plot_params in plot_params_list){
+cancer_type = plot_params[[1]]
+mark = plot_params[[2]]
+sites_to_plot = plot_params[[3]]
+normalize_to = plot_params[[4]]
+
+
+  toplot = readRDS(paste0('out/TFBS/', mark, '_SCPC_monitoring_profiles.RDS'))
+  
+  toplot = merge(toplot[, !colnames(toplot) %in% c('cancer_type', 'cancer_subtype')],
+                 meta_sub,
+                 by = 'study_name') 
+  
+      for (boxplot_arg in c(FALSE, TRUE)) {
+      p = plot_signal_at_sites(
+        subset(toplot,
+               antibody %in% mark & sites %in% c(sites_to_plot, normalize_to)),
+        normalize_to_these_sites = normalize_to,
+        subtract_shoulder = TRUE,
+        group_by_this = 'cancer_type',
+        main_group = 'Prostate',
+        auc_boxplot = boxplot_arg,
+        out_file = paste0('out/TFBS/scores/', cancer_type, '_', paste0(mark, collapse = ''), '_', sites_to_plot[1], '_', normalize_to, '.tsv')
+      )
+      
+      p = p +
+    theme(axis.text.x = element_text(size = 10),
+          axis.text.y = element_text(size = 10))
+      
+      suppressWarnings(print(p))
+      
+      }
+  
+  
+  
+}
+
+```
+
+# track H3K27ac signal with time
+``` {r track signal across time}
+
+library(lubridate)
+
+scores_file = paste0("out/TFBS/scores/Squamous_H3K27ac_TCGA_Squamous_ATAC_top_common_DHS.tsv")
+  scores_SCC = read.table(scores_file, sep = '\t', header = TRUE)
+  scores_SCC = subset(scores_SCC, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Prostate")
+  
+  mean_SCC_signal = read.table(scores_file, sep = '\t', header = TRUE)
+  mean_SCC_signal = subset(mean_SCC_signal, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Healthy")
+  mean_SCC_healthy = mean(mean_SCC_signal$auc)
+  
+scores_file = paste0("out/TFBS/scores/Squamous_H3K27ac_AR_merged_hg19_top_common_DHS.tsv")
+  scores_AD = read.table(scores_file, sep = '\t', header = TRUE)
+  scores_AD = subset(scores_AD, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Prostate")
+  
+  mean_AR_signal = read.table(scores_file, sep = '\t', header = TRUE)
+  mean_AR_signal = subset(mean_AR_signal, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Healthy")
+  mean_AR_healthy = mean(mean_AR_signal$auc)
+  
+scores_file = paste0("out/TFBS/scores/Squamous_H3K27ac_Housekeeping_genes_promoters_top_common_DHS.tsv")
+  scores_HKgenes = read.table(scores_file, sep = '\t', header = TRUE)
+  scores_HKgenes = subset(scores_HKgenes, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Prostate")
+  
+    mean_HKP_signal = read.table(scores_file, sep = '\t', header = TRUE)
+  mean_HKP_signal = subset(mean_HKP_signal, sites != "top_common_DHS") %>% 
+    dplyr::filter(cancer_type == "Healthy")
+  mean_HKP_healthy = mean(mean_HKP_signal$auc)
+  
+scores_OG = scores_AD
+scores_OG$auc_SCC = log10(scores_SCC$auc/mean_SCC_healthy+1)
+scores_OG$auc_AD = log10(scores_AD$auc/mean_AR_healthy+1)
+scores_OG$auc_HKgenes = log10(scores_HKgenes$auc/mean_HKP_healthy+1)
+  
+for (patient in unique(scores_OG$individual_id)) {
+  
+  scores = scores_OG %>% 
+    dplyr::filter(individual_id == patient)
+  
+  start_date <- min(scores$Date)
+
+# Calculate the number of months since the start date for each observation
+scores$Months <- interval(start_date, scores$Date) %/% months(1)
+
+longitudinal_graphs <- ggplot(scores, aes(x = Months)) +
+  geom_point(aes(y = auc_SCC), color = ifelse(scores$cancer_subtype == "Squamous cell carcinoma", "purple", "skyblue")) +
+  geom_line(aes(y = auc_SCC), color = "#BF64C9", sitesze = 1.2) +
+  geom_point(aes(y = auc_AD), color = ifelse(scores$cancer_subtype == "Squamous cell carcinoma", "purple", "skyblue")) +
+  geom_line(aes(y = auc_AD), color = "#3990CC") +
+  geom_point(aes(y = auc_HKgenes), color = ifelse(scores$cancer_subtype == "Squamous cell carcinoma", "purple", "skyblue")) +
+  geom_line(aes(y = auc_HKgenes), color = "red") + 
+  geom_point(aes(y = ctDNA * max(c(scores$auc_AD, scores$auc_SCC))), color = ifelse(scores$cancer_subtype == "Squamous cell carcinoma", "purple", "skyblue")) +
+  geom_line(aes(y = ctDNA * max(c(scores$auc_AD, scores$auc_SCC))), color = "darkgreen") +
+  scale_y_continuous(name = "Epigenomic signal", 
+                     sec.axis = sec_axis(~ . / max(c(scores$auc_AD, scores$auc_SCC)), name = "ctDNA fraction")) +
+  scale_x_continuous(name = "Months since first blood draw", breaks = scales::pretty_breaks(n = 10)) +
+  labs(title = paste("Epigenomic signal evolution of", patient, "over time")) +
+  theme(legend.positestion = "right") +
+  theme_classic()
+
+print(longitudinal_graphs)
+
+}
+
+```
