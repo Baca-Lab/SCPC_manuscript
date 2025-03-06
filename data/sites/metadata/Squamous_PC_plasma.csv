@@ -1,0 +1,18 @@
+study_name,rds_file,peak_number,antibody,additional_annotation,sample_id,source,ctDNA,individual_id,cancer_type,cancer_subtype,Date_of_draw
+JC_K27_SCPC_RGENP3649,data/granges/JC_K27_SCPC_RGENP3649.RDS,1316,H3K27ac,Squamous_monitoring,RGENP3649,DFCI,0.02683,Patient_1,Prostate,Adenocarcinoma,4/12/2021
+JC_K4_reSCPC_RGENP3649,data/granges/JC_K4_reSCPC_RGENP3649.RDS,1978,H3K4me3,Squamous_monitoring,RGENP3649,DFCI,0.02683,Patient_1,Prostate,Adenocarcinoma,4/12/2021
+JC_K27_SCPC_GENP8956,data/granges/JC_K27_SCPC_GENP8956.RDS,595,H3K27ac,Squamous_monitoring,GENP8956,DFCI,0,Patient_1,Prostate,Adenocarcinoma,8/31/2022
+JC_K4_SCPC_GENP8956,data/granges/JC_K4_SCPC_GENP8956.RDS,14582,H3K4me3,Squamous_monitoring,GENP8956,DFCI,0,Patient_1,Prostate,Adenocarcinoma,8/31/2022
+JC_K27_SCPC_RGENP4611,data/granges/JC_K27_SCPC_RGENP4611.RDS,411,H3K27ac,Squamous_monitoring,RGENP4611,DFCI,0.05187,Patient_1,Prostate,Squamous cell carcinoma,4/10/2023
+JC_K4_reSCPC_RGENP4611,data/granges/JC_K4_reSCPC_RGENP4611.RDS,3736,H3K4me3,Squamous_monitoring,RGENP4611,DFCI,0.05187,Patient_1,Prostate,Squamous cell carcinoma,4/10/2023
+JC_K27_SquamousPC_FL,data/granges/JC_K27_SquamousPC_FL.RDS,5583,H3K27ac,Squamous_monitoring,SquamousPC_FL,DFCI,0.0278,Patient_1,Prostate,Squamous cell carcinoma,5/21/2024
+JC_K4_SquamousPC_FL,data/granges/JC_K4_SquamousPC_FL.RDS,15084,H3K4me3,Squamous_monitoring,SquamousPC_FL,DFCI,0.0278,Patient_1,Prostate,Squamous cell carcinoma,5/21/2024
+HP030132_H3K27Ac,data/granges/HP030132_H3K27Ac.RDS,9112,H3K27ac,Healthy,10030132,MGB biobank,0,10030132,Healthy,Healthy,NA
+HP030642_H3K27Ac,data/granges/HP030642_H3K27Ac.RDS,9179,H3K27ac,Healthy,10030642,MGB biobank,0,10030642,Healthy,Healthy,NA
+HP031645_H3K27Ac,data/granges/HP031645_H3K27Ac.RDS,14221,H3K27ac,Healthy,10031645,MGB biobank,0,10031645,Healthy,Healthy,NA
+HP034881_H3K27Ac,data/granges/HP034881_H3K27Ac.RDS,10811,H3K27ac,Healthy,10034881,MGB biobank,0,10034881,Healthy,Healthy,NA
+HP035094_H3K27Ac,data/granges/HP035094_H3K27Ac.RDS,13998,H3K27ac,Healthy,10035094,MGB biobank,0,10035094,Healthy,Healthy,NA
+HP038748_H3K27Ac,data/granges/HP038748_H3K27Ac.RDS,8754,H3K27ac,Healthy,10038748,MGB biobank,0,10038748,Healthy,Healthy,NA
+HP041556_H3K27Ac,data/granges/HP041556_H3K27Ac.RDS,10727,H3K27ac,Healthy,10041556,MGB biobank,0,10041556,Healthy,Healthy,NA
+HP056703_H3K27Ac,data/granges/HP056703_H3K27Ac.RDS,10848,H3K27ac,Healthy,10056703,MGB biobank,0,10056703,Healthy,Healthy,NA
+HP098228_H3K27Ac,data/granges/HP098228_H3K27Ac.RDS,12748,H3K27ac,Healthy,10098228,MGB biobank,0,10098228,Healthy,Healthy,NA
